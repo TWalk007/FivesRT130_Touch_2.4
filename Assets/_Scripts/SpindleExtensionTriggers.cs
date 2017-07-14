@@ -4,13 +4,13 @@ using UnityEngine;
 
 public class SpindleExtensionTriggers : MonoBehaviour {
 	
-	public ExploreController exploreController;
+	public ExploreControllerTouch exploreControllerTouch;
 
 	public bool audioHasPlayed = false;
 
 	void StartNextAudio (){
 		if (!audioHasPlayed) {
-			StartCoroutine (exploreController.VODelay ());
+			StartCoroutine (exploreControllerTouch.VODelay ());
 			audioHasPlayed = true;
 		}
 	}

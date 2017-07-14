@@ -1,8 +1,6 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
-using UnityEngine.VR;
-using GVR;
 
 public class ExploreControllerTouch : MonoBehaviour {
 
@@ -13,9 +11,9 @@ public class ExploreControllerTouch : MonoBehaviour {
 	public MovieCanvasController movieCanvasController;
 	public SpindleExtensionTriggers spindleExtensionTriggers;
 
-	public CuttingTable cuttingTable;
-	public FrontDoors frontDoors;
-	public USFlag usFlag;
+	public CuttingTableTouch cuttingTableTouch;
+	public FrontDoorsTouch frontDoorsTouch;
+	public USFlagTouch usFlagTouch;
 
 	public CaptionsCanvas captionsCanvas;
 	public GameObject scene;
@@ -70,12 +68,11 @@ public class ExploreControllerTouch : MonoBehaviour {
 	}
 	
 	void Update () {
-		frontDoorsOpen = frontDoors.frontDoorsOpen;
+		frontDoorsOpen = frontDoorsTouch.frontDoorsOpen;
 
 		if (!stateLock) {
 			if (myState == States.wait) {
 				states_wait ();
-                //Debug.Log("States.wait now active.");
 			} else if (myState == States.frontLoading && !hasFrontLoadingPlayed) {
 				states_frontLoading ();
 			} else if (myState == States.cuttingTable && hasFrontLoadingPlayed) {
@@ -124,6 +121,8 @@ public class ExploreControllerTouch : MonoBehaviour {
 		arrayInt = 2;
 		stateLock = true;
 
+        CameraLock(spindleTool.transform);
+
 		spindleCamStartPos = cameraController.transform.position;
 		movieCanvasController.InitializeCanvas ();
 		housingSide.SetActive (false);
@@ -147,15 +146,15 @@ public class ExploreControllerTouch : MonoBehaviour {
 		arrayInt = 4;
 		stateLock = true;
 
+        CameraLock(cuttingTableGObject.transform);
+
         operatorCamStartPos = cameraController.transform.position;
 		OperatorMoveIn ();
 		movieCanvasController.InitializeCanvas ();
 		StartCoroutine (movieCanvasController.CanvasFadeIn ());
 		OperatorDoorTrigger ();
 		sideDoorOpened = true;
-
-		CameraLock (operatorCamStartRotation);
-		captionsCanvas.FadeCaptionsPanelToggle (arrayInt + 2);
+        captionsCanvas.FadeCaptionsPanelToggle (arrayInt + 2);
 		StartCoroutine (OperatorAnimationDelay ());
 	}
 
@@ -166,11 +165,23 @@ public class ExploreControllerTouch : MonoBehaviour {
 		StartCoroutine (ToolChangerResetDelay ());
 	}
 
-	#endregion
+    #endregion
 
-	#region Explore Controller Global Methods
+    #region Explore Controller Global Methods
 
-	private void RecenterScene(float targetY, GameObject targetObject, float angleAdjustment){
+    private void CameraLock(Transform trans)
+    {
+        Camera.main.transform.LookAt(trans);
+        Camera.main.GetComponent<CameraMovementTouch>().enabled = false;
+    }
+
+    private void CameraUnlock(Transform trans)
+    {
+        Camera.main.GetComponent<CameraMovementTouch>().enabled = true;
+        Camera.main.transform.LookAt(trans);
+    }
+
+    private void RecenterScene(float targetY, GameObject targetObject, float angleAdjustment){
 		scene.transform.rotation = Quaternion.Euler (scene.transform.rotation.x, scene.transform.rotation.y + angleAdjustment, scene.transform.rotation.z);
 		Vector3 scenePosition = scene.transform.position;
 		scenePosition.x = scene.transform.position.x - 5.5f;
@@ -179,11 +190,6 @@ public class ExploreControllerTouch : MonoBehaviour {
 
 		Vector3 newPosition = new Vector3(targetObject.transform.position.x, targetObject.transform.position.y + 2.25f, targetObject.transform.position.z);
 		cameraController.transform.position = newPosition;
-	}
-
-	private void CameraLock (Vector3 targetRotation){
-        startRotation = targetRotation;
-		cameraController.transform.eulerAngles = targetRotation;
 	}
 
     private IEnumerator StateResetDelay (){
@@ -227,12 +233,12 @@ public class ExploreControllerTouch : MonoBehaviour {
 	#endregion
 
 	#region Spindle Animation Methods
-
+    
 	private IEnumerator SpindleAnimationDelay(){
 		yield return new WaitForSeconds (2.25f);
 		spindleTool.GetComponent<Animator> ().enabled = true;
         exploreSceneAudio.selectedClip = exploreSceneAudio.audioClip[2];
-	}
+    }
 
 	void StartNextAudio (){
 		StartCoroutine(VODelay ());
@@ -262,6 +268,7 @@ public class ExploreControllerTouch : MonoBehaviour {
 		spindleExtensionTriggers.audioHasPlayed = false;
 		myState = States.wait;
 		captionsCanvas.FadeCaptionsPanelToggle (arrayInt + 3);
+        CameraUnlock(spindleTool.transform);
     }
 
 	private IEnumerator HousingFadeTo (float aValue, float aTime){
@@ -319,7 +326,7 @@ public class ExploreControllerTouch : MonoBehaviour {
 		float runtime = exploreSceneAudio.audioClip [4].length;
 		yield return new WaitForSeconds (runtime);
 		OperatorFinished ();
-	}
+  	}
 
 	private void OperatorFinished(){
 		OperatorMoveOut ();
@@ -327,25 +334,24 @@ public class ExploreControllerTouch : MonoBehaviour {
 		movieCanvasController.DeactivateCanvas ();
 		OperatorDoorTrigger ();
 		sideDoorOpened = false;
-		CameraOperatorUnlock ();
-		CameraLock(operatorCamStartRotation);
+        CameraUnlock(cuttingTableGObject.transform);
 		stateLock = false;
 		captionsCanvas.FadeCaptionsPanelToggle (arrayInt + 2);
 		myState = States.wait;
 	}
 
-	private void CameraOperatorUnlock(){
-		StartCoroutine (CameraOperatorUnlockTimer ());
-	}
+	//private void CameraOperatorUnlock(){
+	//	StartCoroutine (CameraOperatorUnlockTimer ());
+	//}
 
-	private IEnumerator CameraOperatorUnlockTimer(){
-		yield return new WaitForSeconds (3.0f);
+	//private IEnumerator CameraOperatorUnlockTimer(){
+	//	yield return new WaitForSeconds (3.0f);
 
-        //Turning this method call off as I will need custom rotation numbers for every hotspot (viewing angle)
-        //you could click on the operator hotspot from. THEN, I would need to do the same thing with all new numbers for
-        //the other cutscene - spindle travel scene.
-        //		RecenterScene (0, operatorHotspot, operatorSceneAngleCorrection);
-    }
+ //       //Turning this method call off as I will need custom rotation numbers for every hotspot (viewing angle)
+ //       //you could click on the operator hotspot from. THEN, I would need to do the same thing with all new numbers for
+ //       //the other cutscene - spindle travel scene.
+ //       //		RecenterScene (0, operatorHotspot, operatorSceneAngleCorrection);
+ //   }
 
 	#endregion
 }
