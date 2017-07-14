@@ -35,15 +35,17 @@ public class ExploreControllerTouch : MonoBehaviour {
 
 	public float doorOpenTime = 2.0f;
 	public float moveSpeed = 3.0f;
-	public float moveOutSpeed = 1f;
+	public float moveOutSpeed = 3.0f;
 	public float movieCanvasFadeDuration = 2f;
 	public float sideHousingFadeDuration = 1.5f;
 	public float cuttingTableRotations = 1f;
-	public float cuttingTableResetDelay = 2.0f;
-	public float cuttingTableRotationsTime = 3f;
-	public float operatorSceneAngleCorrection = 105f;
+	public float cuttingTableResetDelay = 1.5f;
+	public float cuttingTableRotationsTime = 6f;
+	public float operatorSceneAngleCorrection = 130f;
+    public float cuttingTableActivateDelay = 9f;
 
-	public bool hasFrontLoadingPlayed = false;
+
+    public bool hasFrontLoadingPlayed = false;
 
 
 	public enum States {wait, frontLoading, cuttingTable, spindleMovement, usFlag, toolChanger, controls};
@@ -103,7 +105,7 @@ public class ExploreControllerTouch : MonoBehaviour {
 		captionsCanvas.FadeCaptionsPanelToggle (arrayInt + 2); // adding the "+2" is because the captions text array has all the VO captions in it so the front loading starts at array index 2.
 		StartCoroutine (StateResetDelay ());
 		if (hasFrontLoadingPlayed) {
-			particleGlowTable.SetActive (true);
+            StartCoroutine(CuttingTableActivate());
 		}
 	}
 
@@ -202,6 +204,14 @@ public class ExploreControllerTouch : MonoBehaviour {
 		if (hasFrontLoadingPlayed) {
 			particleGlowTable.SetActive (true);
 		}
+    }
+
+    private IEnumerator CuttingTableActivate()
+    {
+        yield return new WaitForSeconds(cuttingTableActivateDelay);
+        particleGlowTable.SetActive(true);
+        cuttingTableGObject.GetComponent<CuttingTableTouch>().canSelect = true;
+        cuttingTableGObject.GetComponentInChildren<HotspotShaderAdjustment>().enabled = true;
     }
 
 	#endregion

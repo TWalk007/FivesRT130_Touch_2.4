@@ -45,7 +45,10 @@ public class FrontDoorsTouch : MonoBehaviour {
 		if (!frontDoorsOpen && hasfrontLoadingPlayed) {
 			exploreControllerTouch.hasFrontLoadingPlayed = false;
 			hasfrontLoadingPlayed = false;
-		}
+            cuttingTable.GetComponent<CuttingTableTouch>().canSelect = false;
+            cuttingTable.GetComponentInChildren<HotspotShaderAdjustment>().enabled = false;
+            exploreControllerTouch.particleGlowTable.SetActive(false);
+        }
 	}
 
 }
