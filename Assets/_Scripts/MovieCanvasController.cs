@@ -10,12 +10,6 @@ public class MovieCanvasController : MonoBehaviour {
 	public GameObject panelTop;
 	public GameObject panelBottom;
 
-//	private Canvas canvas;
-
-	void Start (){
-//		canvas = this.GetComponent<Canvas> ();
-	}
-
 	public void InitializeCanvas(){
 		this.GetComponent<Canvas> ().enabled = true;
 
